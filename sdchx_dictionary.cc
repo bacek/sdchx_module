@@ -47,9 +47,13 @@ std::string get_dict_id(const char* buf, size_t buflen) {
 
 }  // namespace
 
-Dictionary::Dictionary() {}
+Dictionary::Dictionary() : algo_("vcdiff") {}
 
 Dictionary::~Dictionary() {}
+
+bool Dictionary::init() {
+  return false;
+}
 
 void Dictionary::init(const char* begin,
                       const char* end) {

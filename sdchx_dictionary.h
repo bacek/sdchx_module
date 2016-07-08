@@ -31,7 +31,18 @@ class Dictionary {
    private:
   };
 
+  class EncoderFactory {
+  public:
+    virtual ~EncoderFactory() {};
+    virtual Encoder* create_encoder(ngx_pool_t* pool) const = 0;
+  };
+
+  Dictionary();
   virtual ~Dictionary();
+
+  // Initialize Dictionary. Create EncoderFactory for given algo, etc.
+  // TODO(bacek): Add error message
+  bool init();
 
   // Size of dictionary
   size_t size() const {
@@ -66,26 +77,41 @@ class Dictionary {
     max_age_ = max_age;
   }
 
-  // Actual implementation
-  virtual std::string algo() const = 0;
+  const std::string& algo() const {
+    return algo_;
+  }
+  void set_algo(const std::string algo) {
+    algo_ = algo;
+  }
+
+  const std::string& filename() const {
+    return filename_;
+  }
+  void set_filename(const std::string filename) {
+    filename_ = filename;
+  }
 
   // Create specific Encoder. Must be allocated from pool
-  virtual Encoder* create_encoder(ngx_pool_t* pool) const = 0;
+  Encoder* create_encoder(ngx_pool_t* pool) const {
+    return encoder_factory_->create_encoder(pool);
+  }
 
  protected:
-  // Don't let anyone to create it. Apart from derived classes.
-  Dictionary();
 
   // Calculate id and remember size. Just in case.
   void init(const char* begin, const char* end);
 
  private:
   std::string id_;
+  std::string filename_;
+  std::string algo_;  // = "vcdiff";
   size_t size_;
 
   std::string url_;
   std::string tag_;
   size_t max_age_;
+
+  EncoderFactory* encoder_factory_;
 };
 
 

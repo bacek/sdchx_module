@@ -3,11 +3,16 @@
 #include "sdchx_module.h"
 
 #include "sdchx_config.h"
+#include "sdchx_dictionary.h"
 #include "sdchx_pool_alloc.h"
 #include "sdchx_request_context.h"
 #include "sdchx_main_config.h"
 
 namespace sdchx {
+
+std::string to_string(const ngx_str_t& str) {
+  return std::string(reinterpret_cast<char*>(str.data), str.len);
+}
 
 static ngx_int_t filter_init(ngx_conf_t* cf);
 static void* create_conf(ngx_conf_t* cf);
@@ -15,7 +20,7 @@ static char* merge_conf(ngx_conf_t* cf, void* parent, void* child);
 static void* create_main_conf(ngx_conf_t* cf);
 static char* init_main_conf(ngx_conf_t* cf, void* conf);
 
-static char* set_sdchx_dict(ngx_conf_t* cf, ngx_command_t* cmd, void* conf);
+static char* sdchx_dictionary_block(ngx_conf_t* cf, ngx_command_t* cmd, void* conf);
 
 static ngx_conf_bitmask_t  ngx_http_sdchx_proxied_mask[] = {
     { ngx_string("off"), NGX_HTTP_GZIP_PROXIED_OFF },
@@ -61,11 +66,11 @@ static ngx_command_t  filter_commands[] = {
       offsetof(Config, enable),
       NULL },
 
-    { ngx_string("sdchx_dict"),
+    { ngx_string("sdchx_dictionary"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF
                         |NGX_HTTP_LIF_CONF
-                        |NGX_CONF_BLOCK,
-      set_sdchx_dict,
+                        |NGX_CONF_TAKE1|NGX_CONF_BLOCK,
+      sdchx_dictionary_block,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
@@ -312,14 +317,74 @@ create_conf(ngx_conf_t *cf)
   return POOL_ALLOC(cf, Config, cf->pool);
 }
 
+
+char*
+sdchx_dictionary_param(ngx_conf_t* cf, ngx_command_t* dummy, void* cnf) {
+  Dictionary* dict = reinterpret_cast<Dictionary*>(cf->ctx);
+
+  if (cf->args->nelts != 2) {
+    return const_cast<char*>("Incorrect command");
+  }
+
+  ngx_str_t* value = reinterpret_cast<ngx_str_t*>(cf->args->elts);
+
+  ngx_log_error(NGX_LOG_INFO, cf->log, 0, "Handling %*s -> %*s",
+    value[0].len, value[0].data, value[1].len, value[1].data);
+
+  if (ngx_strcmp(value[0].data, "url") == 0) {
+    dict->set_url(to_string(value[1]));
+  } else if (ngx_strcmp(value[0].data, "file") == 0) {
+    dict->set_filename(to_string(value[1]));
+  } else if (ngx_strcmp(value[0].data, "tag") == 0) {
+    dict->set_tag(to_string(value[1]));
+  } else if (ngx_strcmp(value[0].data, "algo") == 0) {
+    dict->set_algo(to_string(value[1]));
+  } else if (ngx_strcmp(value[0].data, "max-age") == 0) {
+    char* ptr = reinterpret_cast<char*>(value[1].data);
+    dict->set_max_age(strtol(ptr, NULL, 10));  // TODO(bacek): handle errors
+  } else {
+    return const_cast<char*>("Unknown parameter");
+  }
+
+
+  return NGX_CONF_OK;
+}
+
 char *
-set_sdchx_dict(ngx_conf_t *cf, ngx_command_t *cmd, void *cnf)
+sdchx_dictionary_block(ngx_conf_t *cf, ngx_command_t *cmd, void *cnf)
 {
-    Config *conf = static_cast<Config*>(cnf);
+  Config *conf = static_cast<Config*>(cnf);
 
-    // HANDLE BLOCK HERE
+  // HANDLE BLOCK HERE
+  ngx_pool_t* pool = ngx_create_pool(NGX_DEFAULT_POOL_SIZE, cf->log);
+  if (pool == NULL) {
+    return reinterpret_cast<char*>(NGX_CONF_ERROR);
+  }
 
+  Dictionary* dict = POOL_ALLOC(cf->pool, Dictionary);
+
+  ngx_conf_t save = *cf;
+  cf->pool = pool;
+  cf->ctx = dict;
+  cf->handler = &sdchx_dictionary_param;
+  cf->handler_conf = NULL;
+
+  char* rv = ngx_conf_parse(cf, NULL);
+
+  *cf = save;
+
+  ngx_destroy_pool(pool);
+
+  if (rv != NULL)
+    return rv;
+
+  if (dict->init()) {
     return NGX_CONF_OK;
+  } else {
+    return const_cast<char*>("Can't initialize dictionary");
+  }
+
+  return NGX_CONF_OK;
 }
 
 

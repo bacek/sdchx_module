@@ -69,8 +69,8 @@ class Dictionary {
   // Actual implementation
   virtual std::string algo() const = 0;
 
-  // Actual encoding thingy
-  virtual std::auto_ptr<Encoder> create_encoder() const = 0;
+  // Create specific Encoder. Must be allocated from pool
+  virtual Encoder* create_encoder(ngx_pool_t* pool) const = 0;
 
  protected:
   // Don't let anyone to create it. Apart from derived classes.

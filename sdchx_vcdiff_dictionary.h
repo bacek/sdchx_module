@@ -15,7 +15,7 @@ class VCDiffDictionary : public Dictionary {
 
   std::string algo() const;
 
-  std::auto_ptr<Encoder> create_encoder() const;
+  Encoder* create_encoder(ngx_pool_t* pool) const;
 
  private:
 };

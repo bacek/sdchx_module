@@ -14,8 +14,8 @@ std::string VCDiffDictionary::algo() const {
   return "vcdiff";
 }
 
-std::auto_ptr<Dictionary::Encoder> VCDiffDictionary::create_encoder() const {
-  return std::auto_ptr<Encoder>();
+Dictionary::Encoder* VCDiffDictionary::create_encoder(ngx_pool_t* pool) const {
+  return NULL;
 }
 
 }  // namespace sdchx

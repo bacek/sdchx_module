@@ -67,7 +67,7 @@ class Dictionary {
   }
 
   // Actual implementation
-  virtual const std::string& algo() const = 0;
+  virtual std::string algo() const = 0;
 
   // Actual encoding thingy
   virtual std::auto_ptr<Encoder> create_encoder() const = 0;

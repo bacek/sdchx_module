@@ -10,8 +10,6 @@ extern "C" {
 #include <ngx_config.h>
 }
 
-#include "sdch_fastdict_factory.h"
-
 namespace sdchx {
 
 class MainConfig {

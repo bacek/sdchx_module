@@ -51,7 +51,7 @@ Dictionary::Dictionary() : algo_("vcdiff") {}
 
 Dictionary::~Dictionary() {}
 
-bool Dictionary::init() {
+bool Dictionary::init(ngx_pool_t* pool) {
   return false;
 }
 

@@ -42,7 +42,7 @@ class Dictionary {
 
   // Initialize Dictionary. Create EncoderFactory for given algo, etc.
   // TODO(bacek): Add error message
-  bool init();
+  bool init(ngx_pool_t* pool);
 
   // Size of dictionary
   size_t size() const {

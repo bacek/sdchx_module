@@ -378,7 +378,7 @@ sdchx_dictionary_block(ngx_conf_t *cf, ngx_command_t *cmd, void *cnf)
   if (rv != NULL)
     return rv;
 
-  if (dict->init()) {
+  if (dict->init(cf->pool)) {
     return NGX_CONF_OK;
   } else {
     return const_cast<char*>("Can't initialize dictionary");

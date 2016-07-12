@@ -78,8 +78,9 @@ This is an Javascript dictionary
 
 --- response_headers
 SDCHx-Algo: vcdiff
-SDCHx-Server-Id: asdfasdfasfd
 SDCHx-Tag: js
+SDCHx-Server-Id: IhySF33OfOd6rHdQDTAlJvqwyUKokUkUdfr6N0ow_0c
+Cache-Control: max-age=3600
 
 
 

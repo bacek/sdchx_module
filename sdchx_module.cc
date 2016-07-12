@@ -22,22 +22,6 @@ static char* init_main_conf(ngx_conf_t* cf, void* conf);
 
 static char* sdchx_dictionary_block(ngx_conf_t* cf, ngx_command_t* cmd, void* conf);
 
-static ngx_conf_bitmask_t  ngx_http_sdchx_proxied_mask[] = {
-    { ngx_string("off"), NGX_HTTP_GZIP_PROXIED_OFF },
-    { ngx_string("expired"), NGX_HTTP_GZIP_PROXIED_EXPIRED },
-    { ngx_string("no-cache"), NGX_HTTP_GZIP_PROXIED_NO_CACHE },
-    { ngx_string("no-store"), NGX_HTTP_GZIP_PROXIED_NO_STORE },
-    { ngx_string("private"), NGX_HTTP_GZIP_PROXIED_PRIVATE },
-    { ngx_string("no_last_modified"), NGX_HTTP_GZIP_PROXIED_NO_LM },
-    { ngx_string("no_etag"), NGX_HTTP_GZIP_PROXIED_NO_ETAG },
-    { ngx_string("auth"), NGX_HTTP_GZIP_PROXIED_AUTH },
-    { ngx_string("any"), NGX_HTTP_GZIP_PROXIED_ANY },
-    { ngx_null_string, 0 }
-};
-static ngx_str_t  ngx_http_gzip_no_cache = ngx_string("no-cache");
-static ngx_str_t  ngx_http_gzip_no_store = ngx_string("no-store");
-static ngx_str_t  ngx_http_gzip_private = ngx_string("private");
-
 static ngx_conf_num_bounds_t stor_size_bounds = {
     ngx_conf_check_num_bounds, 1, 0xffffffffU
 };

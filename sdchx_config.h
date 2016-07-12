@@ -13,6 +13,7 @@ extern "C" {
 #include <vector>
 
 #include "sdchx_pool_alloc.h"
+#include "sdchx_dictionary_factory.h"
 
 namespace sdchx {
 
@@ -26,6 +27,8 @@ class Config {
   static Config* get(ngx_http_request_t* r);
 
   ngx_flag_t enable;
+
+  DictionaryFactory dictionary_factory;
 };
 
 

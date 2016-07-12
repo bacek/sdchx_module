@@ -10,6 +10,8 @@ extern "C" {
 #include <ngx_config.h>
 }
 
+#include "sdchx_dictionary_factory.h"
+
 namespace sdchx {
 
 class MainConfig {
@@ -20,6 +22,7 @@ class MainConfig {
   static MainConfig* get(ngx_http_request_t* r);
 
   // Put factories here
+  DictionaryFactory dictionary_factory;
 };
 
 

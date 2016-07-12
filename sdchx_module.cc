@@ -384,6 +384,8 @@ sdchx_dictionary_block(ngx_conf_t *cf, ngx_command_t *cmd, void *cnf)
     return const_cast<char*>("Can't initialize dictionary");
   }
 
+  conf->dictionary_factory.add_dictionary(dict);
+
   return NGX_CONF_OK;
 }
 

@@ -15,6 +15,9 @@ class DictionaryFactory {
   DictionaryFactory();
   ~DictionaryFactory();
 
+  void add_dictionary(Dictionary* dict) {
+    dictionaries_.insert(dict);
+  }
 
  private:
   // Storage for dictionaries

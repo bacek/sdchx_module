@@ -27,7 +27,6 @@ __DATA__
 === TEST 1: Sanity
 --- user_files
 >>> sdch/js.dict
-
 This is an Javascript dictionary
 
 --- config
@@ -41,10 +40,10 @@ location /sdch {
     max-age 3600;
   }
 
-  return 200 "FOO";
+  # return 200 "FOO";
 }
 --- request
-GET /sdch HTTP/1.1
---- response
-FOO
+GET /sdch/js.dict HTTP/1.1
+--- response_body
+This is an Javascript dictionary
 

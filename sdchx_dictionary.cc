@@ -40,7 +40,7 @@ std::string get_dict_id(const char* buf, size_t buflen) {
   SHA256_Final(sha, &ctx);
 
   std::vector<unsigned char> res;
-  res.resize(44);  // Magic constant
+  res.resize(43);  // Magic constant
   ngx_str_t src = {SHA256_DIGEST_LENGTH, sha};
 	ngx_str_t dst = {res.size(), res.data()};
 	ngx_encode_base64url(&dst, &src);

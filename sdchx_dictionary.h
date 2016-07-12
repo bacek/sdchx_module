@@ -35,6 +35,7 @@ class Dictionary {
   class EncoderFactory {
   public:
     virtual ~EncoderFactory() {};
+    virtual bool init() = 0;
     virtual Encoder* create_encoder(ngx_pool_t* pool) const = 0;
   };
 

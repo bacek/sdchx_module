@@ -11,16 +11,17 @@
 namespace sdchx {
 
 class VCDiffEncoderFactory : public Dictionary::EncoderFactory {
- public:
-   VCDiffEncoderFactory(const char* begin, const char* end);
-   ~VCDiffEncoderFactory();
+public:
+  VCDiffEncoderFactory(const char *begin, const char *end);
+  ~VCDiffEncoderFactory();
 
-    virtual Dictionary::Encoder* create_encoder(ngx_pool_t* pool) const;
+  bool init();
 
- private:
-    open_vcdiff::HashedDictionary hashed_dictionary_;
+  virtual Dictionary::Encoder *create_encoder(ngx_pool_t *pool) const;
+
+private:
+  open_vcdiff::HashedDictionary hashed_dictionary_;
 };
-
 
 }  // namespace sdchx
 

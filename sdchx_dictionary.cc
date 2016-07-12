@@ -85,6 +85,9 @@ bool Dictionary::init(ngx_pool_t* pool) {
   if (!encoder_factory_)
     return false;
 
+  if (!encoder_factory_->init())
+    return false;
+
   init(blob.data(), blob.data() + blob.size());
 
   return true;

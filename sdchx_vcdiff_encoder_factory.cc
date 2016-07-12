@@ -22,10 +22,13 @@ private:
 
 VCDiffEncoderFactory::VCDiffEncoderFactory(const char *begin, const char *end)
     : hashed_dictionary_(begin, end - begin) {
-  hashed_dictionary_.Init();
 }
 
 VCDiffEncoderFactory::~VCDiffEncoderFactory() {
+}
+
+bool VCDiffEncoderFactory::init() {
+  return hashed_dictionary_.Init();
 }
 
 Dictionary::Encoder* VCDiffEncoderFactory::create_encoder(ngx_pool_t* pool) const {

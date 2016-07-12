@@ -8,6 +8,7 @@
 #include "sdchx_request_context.h"
 #include "sdchx_main_config.h"
 #include "sdchx_output_handler.h"
+#include "sdchx_dictionary_metadata_handler.h"
 
 namespace sdchx {
 
@@ -230,6 +231,22 @@ header_filter(ngx_http_request_t *r)
   if (ctx->handler == NULL)
     return NGX_ERROR;
 
+  std::string url = to_string(r->uri);
+  Dictionary *serving_dictionary =
+      conf->dictionary_factory.get_dictionary_by_url(url);
+  ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
+                "sdchx serving_dictionary %p", serving_dictionary);
+  if (serving_dictionary) {
+    ctx->handler = POOL_ALLOC(r, DictionaryMetadataHandler, serving_dictionary,
+                              ctx->handler);
+  }
+
+  for (Handler* h = ctx->handler; h; h = h->next()) {
+    if (!h->init(ctx)) {
+      ctx->done = true;
+      return NGX_ERROR;
+    }
+  }
 
   return ngx_http_next_header_filter(r);
 }
@@ -374,12 +391,11 @@ sdchx_dictionary_block(ngx_conf_t *cf, ngx_command_t *cmd, void *cnf)
     return rv;
 
   if (dict->init(cf->pool)) {
+    conf->dictionary_factory.add_dictionary(dict);
     return NGX_CONF_OK;
   } else {
     return const_cast<char*>("Can't initialize dictionary");
   }
-
-  conf->dictionary_factory.add_dictionary(dict);
 
   return NGX_CONF_OK;
 }

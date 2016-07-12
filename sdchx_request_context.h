@@ -11,7 +11,7 @@ extern "C" {
 #include <ngx_http.h>
 }
 
-#include <memory>
+#include <string>
 
 namespace sdchx {
 
@@ -25,6 +25,26 @@ struct RequestContext {
 
   // Fetch RequestContext associated with nginx request
   static RequestContext* get(ngx_http_request_t* r);
+
+  ngx_int_t create_output_header(
+    const char* key, size_t key_len, bool dup_key,
+    const char* value, size_t value_len, bool dup_value,
+    ngx_table_elt_t* prev);
+
+  template <size_t K>
+  ngx_int_t create_output_header(const char (&key)[K], const std::string &value,
+                                 ngx_table_elt_t *prev = NULL) {
+    return create_output_header(key, K - 1, false,
+                                value.data(), value.length(), true,
+                                prev);
+  }
+
+  template <size_t K, size_t V>
+  ngx_int_t
+  create_output_header(const char (&key)[K],
+                       const char (&value)[V], ngx_table_elt_t *prev = NULL) {
+    return create_output_header(key, K - 1, false, value, V - 1, false, prev);
+  }
 
   ngx_http_request_t* request;
   Handler*            handler;

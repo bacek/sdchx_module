@@ -31,6 +31,7 @@ struct RequestContext {
 
   bool started : 1;
   bool done : 1;
+  bool need_flush : 1;
 
   size_t total_in;
   size_t total_out;

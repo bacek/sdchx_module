@@ -27,6 +27,7 @@ class Config {
   static Config* get(ngx_http_request_t* r);
 
   ngx_flag_t enable;
+  size_t buf_size;
 
   DictionaryFactory dictionary_factory;
 };

@@ -7,6 +7,7 @@
 #include "sdchx_pool_alloc.h"
 #include "sdchx_request_context.h"
 #include "sdchx_main_config.h"
+#include "sdchx_output_handler.h"
 
 namespace sdchx {
 
@@ -218,6 +219,18 @@ header_filter(ngx_http_request_t *r)
     return ngx_http_next_header_filter(r);
   }
 
+  RequestContext* ctx = POOL_ALLOC(r, RequestContext, r);
+  if (ctx == NULL) {
+    return NGX_ERROR;
+  }
+
+  // Allocate Handlers chain in reverse order
+  // Last will be OutputHandler.
+  ctx->handler = POOL_ALLOC(r, OutputHandler, ctx, ngx_http_next_body_filter);
+  if (ctx->handler == NULL)
+    return NGX_ERROR;
+
+
   return ngx_http_next_header_filter(r);
 }
 
@@ -235,7 +248,6 @@ body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
   return ngx_http_next_body_filter(r, in);
 
-#if 0
   if (!ctx->started) {
     ctx->started = true;
     for (Handler* h = ctx->handler; h; h = h->next()) {
@@ -273,7 +285,6 @@ body_filter(ngx_http_request_t *r, ngx_chain_t *in)
       return ctx->handler->on_finish() == STATUS_OK ? NGX_OK : NGX_ERROR;
     }
   }
-#endif
 
   return NGX_OK;
 }

@@ -8,6 +8,10 @@
 #include <vector>
 #include <openssl/sha.h>
 
+#include "sdchx_fdholder.h"
+#include "sdchx_pool_alloc.h"
+#include "sdchx_vcdiff_encoder_factory.h"
+
 namespace sdchx {
 
 namespace {
@@ -44,6 +48,20 @@ std::string get_dict_id(const char* buf, size_t buflen) {
   return std::string(res.begin(), res.end());
 }
 
+bool read_file(const std::string& fn, std::vector<char>& blob) {
+  blob.clear();
+  FDHolder fd(open(fn.c_str(), O_RDONLY));
+  if (fd == -1)
+    return false;
+  struct stat st;
+  if (fstat(fd, &st) == -1)
+    return false;
+  blob.resize(st.st_size);
+  if (read(fd, &blob[0], blob.size()) != (ssize_t)blob.size())
+    return false;
+  return true;
+}
+
 
 }  // namespace
 
@@ -52,7 +70,24 @@ Dictionary::Dictionary() : algo_("vcdiff") {}
 Dictionary::~Dictionary() {}
 
 bool Dictionary::init(ngx_pool_t* pool) {
-  return false;
+  // TODO(bacek): implement "Factory"
+  if (algo() != "vcdiff") {
+    return false;
+  }
+
+  // Get Dictionary content and create EncoderFactory with it
+  std::vector<char> blob;
+  if (!read_file(filename(), blob))
+    return false;
+
+  encoder_factory_ = POOL_ALLOC(pool, VCDiffEncoderFactory, blob.data(),
+                                blob.data() + blob.size());
+  if (!encoder_factory_)
+    return false;
+
+  init(blob.data(), blob.data() + blob.size());
+
+  return true;
 }
 
 void Dictionary::init(const char* begin,

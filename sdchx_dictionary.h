@@ -31,6 +31,7 @@ class Dictionary {
    private:
   };
 
+  // EncoderFactory creates Encoder for each request.
   class EncoderFactory {
   public:
     virtual ~EncoderFactory() {};

@@ -5,6 +5,7 @@
 #define SDCHX_DICTIONARY_FACTORY_H_
 
 #include <set>
+#include <string>
 
 namespace sdchx {
 
@@ -18,6 +19,9 @@ class DictionaryFactory {
   void add_dictionary(Dictionary* dict) {
     dictionaries_.insert(dict);
   }
+
+  // Get Dictionary if URL we are serving is actual dictionary
+  Dictionary* get_dictionary_by_url(const std::string& url) const;
 
  private:
   // Storage for dictionaries

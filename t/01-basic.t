@@ -28,6 +28,8 @@ __DATA__
 --- user_files
 >>> sdch/js.dict
 This is an Javascript dictionary
+>>> sdch/test.js
+This is an Javascript dictionary
 
 --- config
 location /sdch {
@@ -53,6 +55,8 @@ This is an Javascript dictionary
 === TEST 2: Dictionary headers
 --- user_files
 >>> sdch/js.dict
+This is an Javascript dictionary
+>>> sdch/test.js
 This is an Javascript dictionary
 
 --- config
@@ -82,5 +86,35 @@ SDCHx-Tag: js
 SDCHx-Server-Id: IhySF33OfOd6rHdQDTAlJvqwyUKokUkUdfr6N0ow_0c
 Cache-Control: max-age=3600
 
+=== TEST 3: Encoded with single dictionary
+--- user_files
+>>> sdch/js.dict
+This is an Javascript dictionary
+>>> sdch/test.js
+This is an Javascript dictionary
 
+--- config
+location /sdch {
+  sdchx on;
+  sdchx_dictionary static {
+    url /sdch/js.dict;
+    file $TEST_NGINX_SERVROOT/html/sdch/js.dict;
+    tag js;
+    algo vcdiff;
+    max-age 3600;
+  }
 
+  # return 200 "FOO";
+}
+--- request
+GET /sdch/test.js HTTP/1.1
+--- more_headers
+Accept-Encoding: gzip, sdchx
+
+--- error_code
+242
+
+--- response_headers
+Content-Encoding: sdchx
+SDCHx-Algo: vcdiff
+SDCHx-Used-Dictionary-Id: IhySF33OfOd6rHdQDTAlJvqwyUKokUkUdfr6N0ow_0c

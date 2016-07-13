@@ -55,6 +55,10 @@ class Dictionary {
     return id_;
   }
 
+  const std::string& client_id() const {
+    return client_id_;
+  }
+
   const std::string& url() const {
     return url_;
   }
@@ -105,6 +109,7 @@ class Dictionary {
 
  private:
   std::string id_;
+  std::string client_id_;
   std::string filename_;
   std::string algo_;  // = "vcdiff";
   size_t size_;

@@ -3,8 +3,6 @@
 
 #include "sdchx_dictionary.h"
 
-#include <cassert>
-#include <cstring>
 #include <vector>
 #include <openssl/sha.h>
 
@@ -32,20 +30,27 @@ ngx_encode_base64url(ngx_str_t *dst, ngx_str_t *src)
 }
 #endif
 
-std::string get_dict_id(const char* buf, size_t buflen) {
+void encode_id(unsigned char* sha, size_t len, std::string& id) {
+  std::vector<unsigned char> res;
+  res.resize((len * 4 + 2) / 3);  // base64 is 4 chars per 3 bytes
+  ngx_str_t src = {len, sha};
+	ngx_str_t dst = {res.size(), res.data()};
+	ngx_encode_base64url(&dst, &src);
+  id = std::string(res.begin(), res.end());
+}
+
+void get_dict_id(const char* buf,
+                 size_t buflen,
+                 std::string& server_id,
+                 std::string& client_id) {
   SHA256_CTX ctx;
   SHA256_Init(&ctx);
   SHA256_Update(&ctx, buf, buflen);
   unsigned char sha[SHA256_DIGEST_LENGTH];
   SHA256_Final(sha, &ctx);
 
-  std::vector<unsigned char> res;
-  res.resize(43);  // Magic constant
-  ngx_str_t src = {SHA256_DIGEST_LENGTH, sha};
-	ngx_str_t dst = {res.size(), res.data()};
-	ngx_encode_base64url(&dst, &src);
-
-  return std::string(res.begin(), res.end());
+  encode_id(sha, SHA256_DIGEST_LENGTH, server_id);
+  client_id = server_id.substr(0, 8);
 }
 
 bool read_file(const std::string& fn, std::vector<char>& blob) {
@@ -96,7 +101,7 @@ bool Dictionary::init(ngx_pool_t* pool) {
 void Dictionary::init(const char* begin,
                       const char* end) {
   size_ = end - begin;
-  id_ = get_dict_id(begin, size_);
+  get_dict_id(begin, size_, id_, client_id_);
 }
 
 }  // namespace sdchx

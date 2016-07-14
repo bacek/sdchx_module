@@ -99,6 +99,68 @@ backtrace_log(ngx_log_t *log)
 }
 #endif
 
+template<typename T>
+class ListForwardIterator : public std::iterator<std::forward_iterator_tag, T> {
+ public:
+  typedef typename std::iterator<std::forward_iterator_tag, T> base;
+  typedef typename base::pointer pointer;
+  typedef typename base::reference reference;
+  typedef ListForwardIterator<T> this_t;
+
+  ListForwardIterator() : part_(NULL), idx_(0) {}
+  explicit ListForwardIterator(ngx_list_t& lst) : part_(&lst.part), idx_(0) {
+    if (part_->nelts == 0)
+      part_ = NULL;
+  }
+
+  friend void swap(this_t& a, this_t& b) {
+    std::swap(a.part_, b.part_);
+    std::swap(a.idx_,  b.idx_);
+  }
+
+  reference operator*() { return static_cast<T*>(part_->elts)[idx_]; }
+  pointer operator->() { return &**this; }
+
+  this_t& operator++() {
+    ++idx_;
+    if (idx_ >= part_->nelts) {
+      part_ = part_->next;
+      idx_ = 0;
+    }
+    return *this;
+  }
+  this_t operator++(int) {
+    this_t tmp = *this;
+    ++*this;
+    return tmp;
+  }
+
+  bool operator==(const this_t& rhs) const {
+    return part_ == rhs.part_ && idx_ == rhs.idx_;
+  }
+  bool operator!=(const this_t& rhs) const { return !(*this == rhs); }
+
+ private:
+  ngx_list_part_t* part_;
+  ngx_uint_t idx_;
+};
+
+class Table {
+ public:
+  typedef ListForwardIterator<ngx_table_elt_t> iterator;
+
+  explicit Table(ngx_list_t& lst) : lst_(&lst) {}
+
+  inline iterator begin() { return iterator(*lst_); }
+  inline iterator end() { return iterator(); }
+
+ private:
+  Table();
+
+  ngx_list_t* lst_;
+};
+
+
 static ngx_table_elt_t* header_find(ngx_list_t* headers,
                                     const char* key,
                                     ngx_str_t* value) {
@@ -241,6 +303,24 @@ header_filter(ngx_http_request_t *r)
                               ctx->handler);
   }
 
+  std::vector<std::string> available_dictionaries;
+  Table h(r->headers_in.headers);
+
+  ngx_str_t header = ngx_string("SDCHx-Avail-Dictionary");
+
+  for (Table::iterator i = h.begin(); i != h.end(); ++i) {
+    if (i->key.len == header.len &&
+          ngx_strncasecmp(i->key.data, header.data, header.len) == 0) {
+      available_dictionaries.push_back(to_string(i->value));
+    }
+  }
+
+  Dictionary *used_dictionary =
+      conf->dictionary_factory.select_dictionary(available_dictionaries);
+  if (used_dictionary) {
+    ctx->handler = used_dictionary->create_handler(ctx, ctx->handler);
+  }
+
   for (Handler* h = ctx->handler; h; h = h->next()) {
     if (!h->init(ctx)) {
       ctx->done = true;
@@ -261,18 +341,6 @@ body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
   if (ctx == NULL || ctx->done || r->header_only) {
     return ngx_http_next_body_filter(r, in);
-  }
-
-  return ngx_http_next_body_filter(r, in);
-
-  if (!ctx->started) {
-    ctx->started = true;
-    for (Handler* h = ctx->handler; h; h = h->next()) {
-      if (!h->init(ctx)) {
-        ctx->done = true;
-        return NGX_ERROR;
-      }
-    }
   }
 
   ngx_log_debug0(

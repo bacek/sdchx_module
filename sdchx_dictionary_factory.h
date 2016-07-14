@@ -6,6 +6,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 namespace sdchx {
 
@@ -22,6 +23,9 @@ class DictionaryFactory {
 
   // Get Dictionary if URL we are serving is actual dictionary
   Dictionary* get_dictionary_by_url(const std::string& url) const;
+
+  // Select Dictionary to use for given list of available dictionaries
+  Dictionary* select_dictionary(const std::vector<std::string>& ids) const;
 
  private:
   // Storage for dictionaries

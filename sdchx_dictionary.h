@@ -17,6 +17,9 @@ extern "C" {
 
 namespace sdchx {
 
+class Handler;
+class RequestContext;
+
 // In-memory Dictionary representation
 // Should NOT be allocated from short-lived nginx pool. For example
 // request->pool is totally unsuitable for FastDict.
@@ -24,20 +27,15 @@ namespace sdchx {
 // This is base class for particular encoding implementation
 class Dictionary {
  public:
-  // Actual Encoder implementation.
-  class Encoder {
+  // EncoderFactory creates Handler for each request.
+   class HandlerFactory {
    public:
-     virtual ~Encoder() {}
-   private:
-  };
-
-  // EncoderFactory creates Encoder for each request.
-  class EncoderFactory {
-  public:
-    virtual ~EncoderFactory() {};
-    virtual bool init() = 0;
-    virtual Encoder* create_encoder(ngx_pool_t* pool) const = 0;
-  };
+     virtual ~HandlerFactory(){};
+     virtual bool init() = 0;
+     virtual Handler *create_handler(const Dictionary *dict,
+                                     RequestContext *ctx,
+                                     Handler *next) const = 0;
+   };
 
   Dictionary();
   virtual ~Dictionary();
@@ -98,8 +96,8 @@ class Dictionary {
   }
 
   // Create specific Encoder. Must be allocated from pool
-  Encoder* create_encoder(ngx_pool_t* pool) const {
-    return encoder_factory_->create_encoder(pool);
+  Handler* create_handler(RequestContext* ctx, Handler* next) const {
+    return encoder_factory_->create_handler(this, ctx, next);
   }
 
  protected:
@@ -118,7 +116,7 @@ class Dictionary {
   std::string tag_;
   size_t max_age_;
 
-  EncoderFactory* encoder_factory_;
+  HandlerFactory* encoder_factory_;
 };
 
 

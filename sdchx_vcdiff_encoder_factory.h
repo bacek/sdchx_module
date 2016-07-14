@@ -10,14 +10,17 @@
 
 namespace sdchx {
 
-class VCDiffEncoderFactory : public Dictionary::EncoderFactory {
+class Dictionary;
+
+class VCDiffEncoderFactory : public Dictionary::HandlerFactory {
 public:
   VCDiffEncoderFactory(const char *begin, const char *end);
   ~VCDiffEncoderFactory();
 
   bool init();
 
-  virtual Dictionary::Encoder *create_encoder(ngx_pool_t *pool) const;
+  virtual Handler *create_handler(const Dictionary *dict,
+                                  RequestContext *ctx, Handler *next) const;
 
 private:
   open_vcdiff::HashedDictionary hashed_dictionary_;

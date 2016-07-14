@@ -25,4 +25,21 @@ Dictionary* DictionaryFactory::get_dictionary_by_url(
   return NULL;
 }
 
+Dictionary *DictionaryFactory::select_dictionary(
+    const std::vector<std::string> &available_dictionaries) const {
+
+  if (available_dictionaries.empty())
+    return NULL;
+
+  std::string client_id = available_dictionaries[0];
+  for (std::set<Dictionary*>::const_iterator i = dictionaries_.begin();
+      i != dictionaries_.end();
+      ++i) {
+    if ((*i)->client_id() == client_id)
+      return *i;
+  }
+
+  return NULL;
+}
+
 }  // namespace sdchx

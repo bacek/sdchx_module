@@ -110,10 +110,9 @@ location /sdch {
 GET /sdch/test.js HTTP/1.1
 --- more_headers
 Accept-Encoding: gzip, sdchx
+SDCHx-Avail-Dictionary: IhySF33O
 
---- error_code
-242
-
+--- error_code: 242
 --- response_headers
 Content-Encoding: sdchx
 SDCHx-Algo: vcdiff

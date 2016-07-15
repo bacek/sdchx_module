@@ -1,1 +1,28 @@
-<html><head><title>It works!</title></head><body>It works!</body></html>
+<html>
+  <head><title>It works!</title></head>
+  <body>
+    It works!
+    <p>
+    <input type="text" id="url" /> <button id="fetch">Fetch!</button>
+    </p>
+  </body>
+  <script>
+navigator.serviceWorker.register('sdchx-worker.js', {
+  scope: '.'
+}).then(function(reg) {
+  console.log(reg.scope, 'register');
+  console.log('Service worker change, registered the service worker');
+});
+
+var $ = document.querySelector.bind(document); // eslint-disable-line id-length
+
+console.log('Setting onclick');
+$('#fetch').onclick = () => {
+  url = $('#url').value;
+  console.log('Fetch ', url);
+  fetch(url);
+};
+
+console.log('Done');
+  </script>
+</html>

@@ -20,6 +20,7 @@ add_block_preprocessor(sub {
 
 repeat_each(2);
 no_shuffle();
+no_root_location();
 run_tests();
 
 __DATA__
@@ -32,7 +33,7 @@ This is an Javascript dictionary
 This is an Javascript dictionary
 
 --- config
-location /sdch {
+location / {
   sdchx on;
   sdchx_dictionary static {
     url /sdch/js.dict;
@@ -41,8 +42,6 @@ location /sdch {
     algo vcdiff;
     max-age 3600;
   }
-
-  # return 200 "FOO";
 }
 --- request
 GET /sdch/js.dict HTTP/1.1
@@ -59,7 +58,7 @@ This is an Javascript dictionary
 This is an Javascript dictionary
 
 --- config
-location /sdch {
+location / {
   sdchx on;
   sdchx_dictionary static {
     url /sdch/js.dict;
@@ -68,8 +67,6 @@ location /sdch {
     algo vcdiff;
     max-age 3600;
   }
-
-  # return 200 "FOO";
 }
 --- request
 GET /sdch/test.js HTTP/1.1
@@ -89,7 +86,7 @@ This is an Javascript dictionary
 This is an Javascript dictionary
 
 --- config
-location /sdch {
+location / {
   sdchx on;
   sdchx_dictionary static {
     url /sdch/js.dict;
@@ -98,8 +95,6 @@ location /sdch {
     algo vcdiff;
     max-age 3600;
   }
-
-  # return 200 "FOO";
 }
 --- request
 GET /sdch/js.dict HTTP/1.1
@@ -123,7 +118,7 @@ This is an Javascript dictionary
 This is an Javascript dictionary
 
 --- config
-location /sdch {
+location / {
   sdchx on;
   sdchx_dictionary static {
     url /sdch/js.dict;
@@ -132,8 +127,6 @@ location /sdch {
     algo vcdiff;
     max-age 3600;
   }
-
-  # return 200 "FOO";
 }
 --- request
 GET /sdch/test.js HTTP/1.1

@@ -269,7 +269,7 @@ header_filter(ngx_http_request_t *r)
 
   Config* conf = Config::get(r);
 
-  const char *ae_header = conf->webworker_mode 
+  const char *ae_header = conf->webworker_mode == 1
                           ? "x-accept-encoding"
                           : "accept-encoding";
 

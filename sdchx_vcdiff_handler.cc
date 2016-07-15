@@ -38,7 +38,7 @@ bool VCDiffHandler::init(RequestContext* ctx) {
   ctx->create_output_header("SDCHx-Algo", dict_->algo());
   ctx->create_output_header("SDCHx-Used-Dictionary-Id", dict_->id());
 
-  if (Config::get(ctx->request)->webworker_mode) {
+  if (Config::get(ctx->request)->webworker_mode == 1) {
     // In WebWorker mode we bypass Browser's decoding facilities by
     // setting C-E in application/binary and set actual encoding in x-c-e
     ctx->create_output_header("X-Content-Encoding", "sdchx");

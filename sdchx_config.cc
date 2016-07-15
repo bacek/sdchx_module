@@ -8,7 +8,7 @@
 namespace sdchx {
 
 Config::Config(ngx_pool_t* pool)
-    : enable(NGX_CONF_UNSET), buf_size(ngx_pagesize) {
+    : enable(NGX_CONF_UNSET), buf_size(ngx_pagesize), webworker_mode(false) {
 }
 
 Config::~Config() {}

@@ -29,6 +29,13 @@ class Config {
   ngx_flag_t enable;
   size_t buf_size;
 
+  // Switch to use X-Accept-Encoding/X-Content-Encoding headers to work with
+  // WebWorker implementation of SDCHx.
+  // This is workaround for Accept-Encoding/Content-Encoding headers are
+  // "forbidden" to modify within WebWorker.
+  // See https://fetch.spec.whatwg.org/#forbidden-header-name
+  bool webworker_mode;
+
   DictionaryFactory dictionary_factory;
 };
 

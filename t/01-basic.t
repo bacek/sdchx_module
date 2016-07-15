@@ -51,8 +51,37 @@ This is an Javascript dictionary
 --- response_headers
 ! SDCHx-Server-Id
 
+=== TEST 2: Link header advertised
+--- user_files
+>>> sdch/js.dict
+This is an Javascript dictionary
+>>> sdch/test.js
+This is an Javascript dictionary
 
-=== TEST 2: Dictionary headers
+--- config
+location /sdch {
+  sdchx on;
+  sdchx_dictionary static {
+    url /sdch/js.dict;
+    file $TEST_NGINX_SERVROOT/html/sdch/js.dict;
+    tag js;
+    algo vcdiff;
+    max-age 3600;
+  }
+
+  # return 200 "FOO";
+}
+--- request
+GET /sdch/test.js HTTP/1.1
+--- response_body
+This is an Javascript dictionary
+--- response_headers
+! SDCHx-Server-Id
+--- response_headers_like
+Link: <\S+>; rel="sdchx-dictionary"
+
+
+=== TEST 3: Dictionary headers
 --- user_files
 >>> sdch/js.dict
 This is an Javascript dictionary
@@ -86,7 +115,7 @@ SDCHx-Tag: js
 SDCHx-Server-Id: IhySF33OfOd6rHdQDTAlJvqwyUKokUkUdfr6N0ow_0c
 Cache-Control: max-age=3600
 
-=== TEST 3: Encoded with single dictionary
+=== TEST 4: Encoded with single dictionary
 --- user_files
 >>> sdch/js.dict
 This is an Javascript dictionary

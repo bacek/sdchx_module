@@ -334,6 +334,17 @@ header_filter(ngx_http_request_t *r)
     ctx->handler = used_dictionary->create_handler(ctx, ctx->handler);
   }
 
+  // Generate Link headers
+  const std::set<Dictionary *> &dictionaries =
+      conf->dictionary_factory.dictionaries();
+  for (std::set<Dictionary*>::const_iterator i = dictionaries.begin();
+       i != dictionaries.end();
+       ++i) {
+    if (!used_dictionary || (*i)->client_id() != used_dictionary->client_id()) {
+      ctx->create_output_header("Link", "<" + (*i)->url() + ">; rel=\"sdchx-dictionary\"");
+    }
+  }
+
   for (Handler* h = ctx->handler; h; h = h->next()) {
     if (!h->init(ctx)) {
       ctx->done = true;

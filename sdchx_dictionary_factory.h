@@ -27,6 +27,11 @@ class DictionaryFactory {
   // Select Dictionary to use for given list of available dictionaries
   Dictionary* select_dictionary(const std::vector<std::string>& ids) const;
 
+  // Get list of stored dictionaries to produce Link headers
+  const std::set<Dictionary*>& dictionaries() const {
+    return dictionaries_;
+  }
+
  private:
   // Storage for dictionaries
   std::set<Dictionary*> dictionaries_;

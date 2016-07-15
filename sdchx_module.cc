@@ -224,14 +224,14 @@ ngx_int_t create_output_header(ngx_http_request_t* r,
 bool should_process(ngx_http_request_t* r, Config* conf) {
   if (!conf->enable) {
     ngx_log_debug(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "sdch header: not enabled");
+                   "sdchx header: not enabled");
 
     return false;
   }
 
   if (r->headers_out.status != NGX_HTTP_OK) {
     ngx_log_debug(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "sdch header: unsupported status");
+                   "sdchx header: unsupported status");
 
     return false;
   }
@@ -239,7 +239,7 @@ bool should_process(ngx_http_request_t* r, Config* conf) {
   if (r->headers_out.content_encoding
     && r->headers_out.content_encoding->value.len) {
     ngx_log_debug(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "sdch header: content is already encoded");
+                   "sdchx header: content is already encoded");
     return false;
   }
 
@@ -247,13 +247,13 @@ bool should_process(ngx_http_request_t* r, Config* conf) {
   if (r->headers_out.content_length_n != -1
     && r->headers_out.content_length_n < conf->min_length) {
     ngx_log_debug(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "sdch header: content is too small");
+                   "sdchx header: content is too small");
     return false;
   }
 
   if (ngx_http_test_content_type(r, &conf->types) == NULL) {
     ngx_log_debug(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "sdch header: unsupported content type");
+                   "sdchx header: unsupported content type");
     return false;
   }
 #endif
@@ -265,17 +265,21 @@ static ngx_int_t
 header_filter(ngx_http_request_t *r)
 {
   ngx_log_debug(
-      NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http sdch filter header 000");
+      NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http sdchx filter header 000");
 
   Config* conf = Config::get(r);
 
+  const char *ae_header = conf->webworker_mode 
+                          ? "x-accept-encoding"
+                          : "accept-encoding";
+
   ngx_str_t val;
-  if (header_find(&r->headers_in.headers, "accept-encoding", &val) == 0 ||
+  if (header_find(&r->headers_in.headers, ae_header, &val) == 0 ||
       ngx_strstrn(val.data, const_cast<char*>("sdchx"), val.len) == 0) { // XXX
     ngx_log_debug(NGX_LOG_DEBUG_HTTP,
                   r->connection->log,
-                  0,
-                  "sdchx header: no 'sdchx' in accept-encoding");
+                  1,
+                  "sdchx header: no 'sdchx' in %s", ae_header);
     return ngx_http_next_header_filter(r);
   }
 
@@ -367,7 +371,7 @@ body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     ctx->total_in += buf_size;
 
     if (status == STATUS_ERROR) {
-      ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0, "sdch failed");
+      ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0, "sdchx failed");
       ctx->done = true;
       return NGX_ERROR;
     }
@@ -500,7 +504,7 @@ filter_init(ngx_conf_t *cf)
     ngx_http_next_body_filter = ngx_http_top_body_filter;
     ngx_http_top_body_filter = body_filter;
 
-    ngx_conf_log_error(NGX_LOG_NOTICE, cf, 0, "http sdch filter init");
+    ngx_conf_log_error(NGX_LOG_NOTICE, cf, 0, "http sdchx filter init");
     return NGX_OK;
 }
 

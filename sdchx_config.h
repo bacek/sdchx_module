@@ -34,7 +34,7 @@ class Config {
   // This is workaround for Accept-Encoding/Content-Encoding headers are
   // "forbidden" to modify within WebWorker.
   // See https://fetch.spec.whatwg.org/#forbidden-header-name
-  bool webworker_mode;
+  ngx_flag_t webworker_mode;
 
   DictionaryFactory dictionary_factory;
 };

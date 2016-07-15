@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
+/**
+ * Small change to be usable within Web Workers by Vasily Chekalkin.
+ * Original code is available on https://github.com/plotnikoff/vcdiff.js
+ */
+
 /*global module, require, window */
 
-(function () {
+(function (obj) {
     var diffable = {};
 
     diffable.RollingHash = function () {
@@ -296,8 +301,8 @@
     };
 
     if (typeof module === 'undefined' || typeof require === 'undefined') {
-        window.diffable = diffable;
+        obj.diffable = diffable;
     } else {
         module.exports = diffable;
     }
-}());
+})(this);

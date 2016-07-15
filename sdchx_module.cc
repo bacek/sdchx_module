@@ -2,6 +2,8 @@
 
 #include "sdchx_module.h"
 
+#include <algorithm>
+
 #include "sdchx_config.h"
 #include "sdchx_dictionary.h"
 #include "sdchx_pool_alloc.h"
@@ -261,6 +263,15 @@ bool should_process(ngx_http_request_t* r, Config* conf) {
   return true;
 }
 
+struct client_id_comparator {
+  bool operator()(const Dictionary* d, const std::string& i) {
+    return d->client_id() < i;
+  }
+  bool operator()(const std::string& i, const Dictionary* d) {
+    return i < d->client_id();
+  }
+};
+
 static ngx_int_t
 header_filter(ngx_http_request_t *r)
 {
@@ -337,12 +348,24 @@ header_filter(ngx_http_request_t *r)
   // Generate Link headers
   const std::set<Dictionary *> &dictionaries =
       conf->dictionary_factory.dictionaries();
-  for (std::set<Dictionary*>::const_iterator i = dictionaries.begin();
-       i != dictionaries.end();
+
+  // Remove available dictionaries from list of being advertised
+  std::set<Dictionary*> announce_dictionaries;
+  std::set_difference(dictionaries.begin(), dictionaries.end(),
+    available_dictionaries.begin(), available_dictionaries.end(),
+    std::inserter(announce_dictionaries, announce_dictionaries.begin()),
+    client_id_comparator());
+
+  // And we are serving it there is no reason to advertise it either
+  if (serving_dictionary) {
+    announce_dictionaries.erase(serving_dictionary);
+  }
+
+  for (std::set<Dictionary*>::const_iterator i = announce_dictionaries.begin();
+       i != announce_dictionaries.end();
        ++i) {
-    if (!used_dictionary || (*i)->client_id() != used_dictionary->client_id()) {
-      ctx->create_output_header("Link", "<" + (*i)->url() + ">; rel=\"sdchx-dictionary\"");
-    }
+      ctx->create_output_header("Link", "<" + (*i)->url() +
+                                            ">; rel=\"sdchx-dictionary\"");
   }
 
   for (Handler* h = ctx->handler; h; h = h->next()) {

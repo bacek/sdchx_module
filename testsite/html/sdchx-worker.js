@@ -1,8 +1,15 @@
 "use strict";
 
-importScripts("./vcdiff.js");
+let XMLHttpRequest = function() {}
+XMLHttpRequest.prototype = {
+  open: function() {},
+  send: function() {},
+};
 
-console.log("Diffable", diffable);
+var Module = {
+  ENVIRONMENT: "WORKER",
+};
+importScripts("./vcdiff.js");
 
 const CACHE_NAME = "sdchx-cache";
 const DICTIONARIES_CACHE_NAME = "sdchx-cache";
@@ -27,8 +34,22 @@ let Dictionary = function(response) {
     }
   }
 
+  response.clone().arrayBuffer().then(body => {
+    console.log("Create VCDiffStreamingDecoder", body.byteLength);
+    this.dict = new Uint8Array(body);
+  });
+
   // TODO(bacek) Check Server-Id vs sha256(response.body) to detect corruptions
   console.log(this);
+};
+
+Dictionary.prototype = {
+  decode: function(encoded) {
+    let decoder = new Module.VCDiffStreamingDecoder(this.dict);
+    let res = decoder.decodeChunk(encoded);
+    decoder.finish();
+    return res;
+  }
 };
 
 let DictionaryFactory = function() {
@@ -36,6 +57,7 @@ let DictionaryFactory = function() {
   this.cache = caches.open(DICTIONARIES_CACHE_NAME);
   this.dictionaries = {};
   this.inFlight = {};
+  this.dict_by_id = {};
 };
 
 DictionaryFactory.prototype = {
@@ -54,7 +76,9 @@ DictionaryFactory.prototype = {
 
   onDictionary: function(response) {
     if (!this.dictionaries[response.url]) {
-      this.dictionaries[response.url] = new Dictionary(response);
+      let d = new Dictionary(response);
+      this.dictionaries[response.url] = d;
+      this.dict_by_id[d.serverId] = d;
     }
   },
 
@@ -70,6 +94,10 @@ DictionaryFactory.prototype = {
     if (ids) {
       return ["SDCHx-Avail-Dictionary", ids.join(", ")];
     }
+  },
+
+  getDictionary: function(serverId) {
+    return this.dict_by_id[serverId];
   },
 };
 
@@ -116,6 +144,23 @@ function maybeDecodeContent(response) {
   console.log("maybeDecodeContent");
   if (response.status == 242) {
     console.log("GOT ENCODED CONTENT!!!");
+    let id = response.headers.get("sdchx-used-dictionary-id");
+    let d = dictionaryFactory.getDictionary(id);
+    if (d === null) {
+      throw "Unknow dictionary " + id;
+    }
+
+    return response.arrayBuffer().then(body => {
+      console.log("Encoded", body.byteLength);
+      let decoded = d.decode(body);
+      console.log("Decoded", decoded);
+
+      let init = {
+        status: 200,
+        // TODO(bacek) Copy appropriate bits from original
+      };
+      return new Response(decoded, init);
+    });
   }
   return response;
 }

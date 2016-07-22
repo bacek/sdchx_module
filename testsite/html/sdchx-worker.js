@@ -160,19 +160,20 @@ function maybeDecodeContent(response) {
   console.log("maybeDecodeContent");
   if (response.status === 242) {
     console.log("GOT ENCODED CONTENT!!!");
-    let id = response.headers.get("sdchx-used-dictionary-id");
+    let id = response.headers.get("SDCHx-Used-Dictionary-Id");
     let d = dictionaryFactory.getDictionary(id);
-    if (d === null) {
+    if (d === undefined) {
       throw Error("Unknow dictionary " + id);
     }
 
     return response.arrayBuffer().then(body => {
       console.log("Encoded", body.byteLength);
       let decoded = d.decode(body);
-      console.log("Decoded", decoded);
+      console.log("Decoded", decoded.byteLength, decoded.length);
 
       let init = {
         status: 200,
+        headers: response.headers,
         // TODO(bacek) Copy appropriate bits from original
       };
       return new Response(decoded, init);

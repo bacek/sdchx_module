@@ -99,6 +99,22 @@ class DictionaryFactory {
   getDictionary(serverId) {
     return this.dictById[serverId];
   }
+
+  canDecode(response) {
+    if (!response.headers.has("SDCHx-Used-Dictionary-Id")) {
+      console.log("Not encoded");
+      return true;
+    }
+    let id = response.headers.get("SDCHx-Used-Dictionary-Id");
+    let d = this.getDictionary(id);
+    if (d === undefined) {
+      console.log("Can't decode response. Dictionary not found", id);
+      return false;
+    }
+
+    // Assume that Dictionary can decode.
+    return true;
+  }
 }
 
 let dictionaryFactory = new DictionaryFactory();
@@ -183,8 +199,13 @@ function fetchFromCache(request) {
   return caches.open(CACHE_NAME).then(cache => {
     return cache.match(request).then(response => {
       if (response) {
-        console.log('Return cached', request.url);
-        return response;
+        console.log('Got cached', request.url);
+        if (dictionaryFactory.canDecode(response)) {
+          console.log('Can decode cached');
+          return response;
+        }
+
+        console.log("Can't decode cached. Fallback");
       }
 
       console.log('Do network fetch');

@@ -89,9 +89,11 @@ class DictionaryFactory {
       return this.dictionaries[k].clientId;
     });
     console.log(ids);
-    if (ids) {
+    if (ids.length > 0) {
       return ["SDCHx-Avail-Dictionary", ids.join(", ")];
     }
+
+    return null;
   }
 
   getDictionary(serverId) {
@@ -219,8 +221,8 @@ function createRequest(original) {
     options.headers[h[0]] = h[1];
   }
 
-  var avail = dictionaryFactory.getAvailDictionariesHeader();
-  if (avail) {
+  let avail = dictionaryFactory.getAvailDictionariesHeader();
+  if (avail !== null) {
     console.log("Adding header", avail);
     options.headers[avail[0]] = avail[1];
   }

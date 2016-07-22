@@ -1,67 +1,65 @@
 "use strict";
 
-let XMLHttpRequest = function() {}
+let XMLHttpRequest = function() {};
 XMLHttpRequest.prototype = {
   open: function() {},
   send: function() {},
 };
 
-var Module = {
-  ENVIRONMENT: "WORKER",
-};
+let Module = {};
 importScripts("./vcdiff.js");
 
 const CACHE_NAME = "sdchx-cache";
 const DICTIONARIES_CACHE_NAME = "sdchx-cache";
 
-let Dictionary = function(response) {
-  console.log("Dictionary ctor");
+class Dictionary {
+  constructor(response) {
+    console.log("Dictionary ctor");
 
-  for (let h of response.headers) {
-    console.log('Header', h);
-    if (h[0] === "sdchx-server-id") {
-      this.serverId = h[1];
-      this.clientId = h[1].substr(0, 8);
-    } else if (h[0] === "sdchx-algo") {
-      this.algo = h[1];
-    } else if (h[0] === "sdchx-tag") {
-      this.tag = h[1];
-    } else if (h[0] === "cache-control") {
-      let m = h[1].match(/max-age=(\d+)/);
-      if (m) {
-        this.maxAge = m[1];
+    for (let h of response.headers) {
+      console.log('Header', h);
+      if (h[0] === "sdchx-server-id") {
+        this.serverId = h[1];
+        this.clientId = h[1].substr(0, 8);
+      } else if (h[0] === "sdchx-algo") {
+        this.algo = h[1];
+      } else if (h[0] === "sdchx-tag") {
+        this.tag = h[1];
+      } else if (h[0] === "cache-control") {
+        let m = h[1].match(/max-age=(\d+)/);
+        if (m) {
+          this.maxAge = m[1];
+        }
       }
     }
+
+    response.clone().arrayBuffer().then(body => {
+      console.log("Create VCDiffStreamingDecoder", body.byteLength);
+      this.dict = new Uint8Array(body);
+    });
+
+    // TODO(bacek) Check Server-Id vs sha256(response.body) to detect corruptions
+    console.log(this);
   }
 
-  response.clone().arrayBuffer().then(body => {
-    console.log("Create VCDiffStreamingDecoder", body.byteLength);
-    this.dict = new Uint8Array(body);
-  });
-
-  // TODO(bacek) Check Server-Id vs sha256(response.body) to detect corruptions
-  console.log(this);
-};
-
-Dictionary.prototype = {
-  decode: function(encoded) {
+  decode(encoded) {
     let decoder = new Module.VCDiffStreamingDecoder(this.dict);
     let res = decoder.decodeChunk(encoded);
     decoder.finish();
     return res;
   }
-};
+}
 
-let DictionaryFactory = function() {
-  console.log("DictionaryFactory ctor");
-  this.cache = caches.open(DICTIONARIES_CACHE_NAME);
-  this.dictionaries = {};
-  this.inFlight = {};
-  this.dict_by_id = {};
-};
+class DictionaryFactory {
+  constructor() {
+    console.log("DictionaryFactory ctor");
+    this.cache = caches.open(DICTIONARIES_CACHE_NAME);
+    this.dictionaries = {};
+    this.inFlight = {};
+    this.dictById = {};
+  }
 
-DictionaryFactory.prototype = {
-  onLink: function(link) {
+  onLink(link) {
     console.log('onLink', link);
     if (this.dictionaries[link] || this.inFlight[link]) {
       console.log("DF Skipping " + link);
@@ -72,17 +70,17 @@ DictionaryFactory.prototype = {
         return resp;
       });
     }
-  },
+  }
 
-  onDictionary: function(response) {
+  onDictionary(response) {
     if (!this.dictionaries[response.url]) {
       let d = new Dictionary(response);
       this.dictionaries[response.url] = d;
-      this.dict_by_id[d.serverId] = d;
+      this.dictById[d.serverId] = d;
     }
-  },
+  }
 
-  getAvailDictionariesHeader: function() {
+  getAvailDictionariesHeader() {
     console.log("getAvailDictionariesHeader");
     if (!this.dictionaries)
       return null;
@@ -94,12 +92,12 @@ DictionaryFactory.prototype = {
     if (ids) {
       return ["SDCHx-Avail-Dictionary", ids.join(", ")];
     }
-  },
+  }
 
-  getDictionary: function(serverId) {
-    return this.dict_by_id[serverId];
-  },
-};
+  getDictionary(serverId) {
+    return this.dictById[serverId];
+  }
+}
 
 let dictionaryFactory = new DictionaryFactory();
 
@@ -142,12 +140,12 @@ function extractDictionaryLinks(response) {
  */
 function maybeDecodeContent(response) {
   console.log("maybeDecodeContent");
-  if (response.status == 242) {
+  if (response.status === 242) {
     console.log("GOT ENCODED CONTENT!!!");
     let id = response.headers.get("sdchx-used-dictionary-id");
     let d = dictionaryFactory.getDictionary(id);
     if (d === null) {
-      throw "Unknow dictionary " + id;
+      throw Error("Unknow dictionary " + id);
     }
 
     return response.arrayBuffer().then(body => {

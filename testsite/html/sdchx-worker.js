@@ -248,3 +248,8 @@ self.addEventListener("activate", event => {
   console.log("[activate] Claiming this service worker!");
   event.waitUntil(self.clients.claim());
 });
+
+self.addEventListener("message", message => {
+  console.log("Got message ", message);
+});
+

@@ -5,24 +5,37 @@
     <p>
     <input type="text" id="url" /> <button id="fetch">Fetch!</button>
     </p>
+    <p>
+    <button id="clear_dictionaries">Clear stored dictionaries</button>
+    <button id="clear_caches">Clear caches</button>
+    </p>
   </body>
   <script>
 navigator.serviceWorker.register('sdchx-worker.js', {
   scope: '.'
 }).then(function(reg) {
-  console.log(reg.scope, 'register');
   console.log('Service worker change, registered the service worker');
+  console.log(reg);
+
+  var $ = document.querySelector.bind(document); // eslint-disable-line id-length
+
+  console.log('Setting onclick');
+  $('#fetch').onclick = () => {
+    url = $('#url').value;
+    console.log('Fetch ', url);
+    fetch(url);
+  };
+
+  $("#clear_dictionaries").onclick = () => {
+    navigator.serviceWorker.controller.postMessage({clear_dictionaries: true});
+  }
+
+  $("#clear_caches").onclick = () => {
+    navigator.serviceWorker.controller.postMessage({clear_caches: true});
+  }
+
+  console.log('Done');
 });
 
-var $ = document.querySelector.bind(document); // eslint-disable-line id-length
-
-console.log('Setting onclick');
-$('#fetch').onclick = () => {
-  url = $('#url').value;
-  console.log('Fetch ', url);
-  fetch(url);
-};
-
-console.log('Done');
   </script>
 </html>
